@@ -43,8 +43,7 @@ var requestHandler = function(request, response) {
   headers['Content-Type'] = 'application/json';
 
   response.writeHead(statusCode, headers);
-  console.log(data);
-  response.end(JSON.stringify({results: data}));
+  response.end(JSON.stringify( {results:data}));
 };
 
 var defaultCorsHeaders = {
