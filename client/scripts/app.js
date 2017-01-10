@@ -63,6 +63,7 @@ var app = {
       data: { order: '-createdAt' },
       contentType: 'application/json; charset=UTF-8',
       success: function(data) {
+        console.log(data);
         // Don't bother if we have nothing to work with
         if (!data.results || !data.results.length) { return; }
 

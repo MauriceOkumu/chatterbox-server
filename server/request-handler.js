@@ -1,65 +1,57 @@
 'use strict';
 
 const url = require('url');
+const qs = require('querystring');
 
-let headers = {
+let data = [];
+
+var requestHandler = function(request, response) {
+
+  console.log('Serving request type ' + request.method + ' for url ' + request.url);
+
+  let parsedURL = url.parse(request.url, true);
+
+  // The outgoing status.
+  var statusCode = 200;
+
+  if (parsedURL.pathname === '/classes/messages') {
+    if (request.method === 'GET') {
+      statusCode = 200;
+    }
+
+    if (request.method === 'POST') {
+      statusCode = 201;
+
+      var body = '';
+
+      request.on('data', function (data) {
+          body += data;
+      })
+
+      request.on('end', function () {
+        data.push(JSON.parse(body));
+      });
+    };
+
+  } else {
+    statusCode = 404;
+  }
+
+  // See the note below about CORS headers.
+  var headers = defaultCorsHeaders;
+
+  headers['Content-Type'] = 'application/json';
+
+  response.writeHead(statusCode, headers);
+  console.log(data);
+  response.end(JSON.stringify({results: data}));
+};
+
+var defaultCorsHeaders = {
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'access-control-allow-headers': 'content-type, accept',
   'access-control-max-age': 10 // Seconds.
 };
 
-let data = [];
-
-var requestHandler = function(request, response) {
-  
-  console.log('Serving request type ' + request.method + ' for url ' + request.url);
-
-  let parsedURL = url.parse(request.url);
-
-  request.on('error', function(err) {
-    console.error(err);
-    response.statusCode = 400;
-    response.end();
-  });
-
-  response.on('error', function(err) {
-    console.error(err);
-  });
-
-  if (parsedURL.pathname === '/classes/messages') {
-    response.setHeader('Content-Type', 'application/json');
-    
-    // Get request
-    if (request.method === 'GET') {
-      response.writeHead(200, headers);
-
-
-    // Post request
-    } else if (request.method === 'POST') {
-      response.writeHead(201, headers);
-
-      let body = '';
-
-      request.on('data', function(chunk) {
-        body += chunk;
-      });
-
-      request.on('end', function() {
-        var obj = JSON.parse(body);
-        data.push(obj);
-      });
-
-      
-    }
-    
-    response.write(JSON.stringify({results: data }));
-    response.end();
-
-  } else {
-    response.statusCode = 404;
-    response.end();
-  }
-};
-
-module.exports = requestHandler;
+exports.requestHandler = requestHandler;
